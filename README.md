@@ -109,6 +109,79 @@ The application creates separate data files for each device in the configured ou
 - Console output for real-time monitoring
 - Error logs for troubleshooting
 
+## installing on raspberry pi
+
+For bun you need a Raspberry Pi that supports 64 bit Raspberry OS
+
+Install the latest headless version of Raspberry OS and login using SSH.
+In the example, the user is named 'energy'.
+
+### Install bun
+````
+curl -fsSL https://bun.sh/install | bash
+source /home/energy/.bashrc
+which bun
+````
+
+### Install git, clone the repo and install the required node modules
+````
+sudo apt-get install git
+git clone https://github.com/mosbuma/homewizard-2-pvoutput.git
+cd homewizard-2-pvoutput/
+bun install
+bun install
+````
+
+### Create a .env file
+````
+cp .env.example .env
+nano .env
+````
+
+### Test the settings
+````
+bun start
+````
+
+### Start the service on boot
+
+Create a systemd unit file
+````
+sudo nano /etc/systemd/system/energy-monitor.service
+````
+
+Contents:
+````
+[Unit]
+Description=Energy Monitor with Bun
+After=network.target
+
+[Service]
+ExecStart=/home/energy/.bun/bin/bun /home/energy/homewizard-2-pvoutput/src/index.ts
+WorkingDirectory=/home/energy/homewizard-2-pvoutput
+Restart=always
+User=energy
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target
+````
+
+Setup and start the service 
+````
+sudo systemctl daemon-reexec
+sudo systemctl enable energy-monitor
+sudo systemctl start energy-monitor
+````
+
+You can view the service logs using
+````
+journalctl -u energy-monitor.service -f
+````
+
+### Reboot
+Reboot and check the service logs for correct startup.
+
 ## API References
 
 - [Homewizard API Documentation](https://api-documentation.homewizard.com/docs/introduction)
@@ -117,3 +190,4 @@ The application creates separate data files for each device in the configured ou
 ## License
 
 MIT
+
