@@ -162,25 +162,31 @@ export class DeviceService {
     }
 
     private async fetchDeviceData(device: DeviceConfig, timestamp: Date): Promise<EnergyData> {
-        const baseURL = `http://${device.homewizard.ip}`;
-        const response = await fetch(`${baseURL}/api/v1/data`, {
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
+        try {
+            const baseURL = `http://${device.homewizard.ip}`;
+            const response = await fetch(`${baseURL}/api/v1/data`, {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            if (!response.ok) {
+                logger.error(`Device ${device.name} HTTP error! status: ${response.status}`);
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json() as EnergyData;
+
+            data.deviceId = device.id;
+            data.deviceName = device.name;
+            data.deviceType = device.type;
+            data.timestamp = timestamp.toISOString();
+
+            return data;
+        } catch (error) {
+            logger.error(`Error fetching data from ${device.name}:`, error);
+            throw error;
         }
-
-        const data = await response.json() as EnergyData;
-
-        data.deviceId = device.id;
-        data.deviceName = device.name;
-        data.deviceType = device.type;
-        data.timestamp = timestamp.toISOString();
-
-        return data;
     }
 
     private writeDataToFile(data: EnergyData, filePath: string) {

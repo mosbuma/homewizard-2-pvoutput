@@ -18,7 +18,6 @@ A Node.js/Bun application that polls multiple Homewizard devices for energy data
 
 ## Prerequisites
 
-- Node.js or Bun runtime
 - Homewizard devices with API access
 - PV-Output API credentials
 
